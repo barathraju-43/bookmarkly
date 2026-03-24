@@ -1,0 +1,115 @@
+<h2>Choose the product direction</h2>
+<p class="subtitle">Both satisfy the brief. Pick the one that best fits how you want this take-home to feel in a demo.</p>
+
+<div class="cards">
+  <div class="card" data-choice="editorial" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option A: Editorial Workspace</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#f7f1e8 0%,#efe5d4 100%);padding:16px;color:#201912;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:.65;">Smart Bookmark</div>
+              <div style="font-size:26px;font-weight:700;font-family:Georgia,serif;">Keep the internet worth returning to.</div>
+            </div>
+            <div style="border:1px solid rgba(32,25,18,.18);padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.55);font-size:12px;">Google Sign In</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:12px;">
+            <div style="background:rgba(255,255,255,.72);border:1px solid rgba(32,25,18,.1);border-radius:18px;padding:14px;">
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Saved links</div>
+              <div style="display:grid;gap:8px;">
+                <div style="background:#fff;border-radius:14px;padding:10px;border:1px solid rgba(32,25,18,.08);">
+                  <div style="font-weight:600;">Linear changelog</div>
+                  <div style="font-size:12px;opacity:.68;">product • release notes</div>
+                </div>
+                <div style="background:#fff;border-radius:14px;padding:10px;border:1px solid rgba(32,25,18,.08);">
+                  <div style="font-weight:600;">Supabase auth guide</div>
+                  <div style="font-size:12px;opacity:.68;">devtools • backend</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;gap:12px;">
+              <div style="background:#201912;color:#f6efe4;border-radius:18px;padding:14px;">
+                <div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.72;">Add bookmark</div>
+                <div style="margin-top:10px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px;">https://example.com/article</div>
+                <div style="margin-top:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px;">Designing realtime apps</div>
+              </div>
+              <div style="background:rgba(255,255,255,.72);border:1px solid rgba(32,25,18,.1);border-radius:18px;padding:14px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Filters</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <span style="padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(32,25,18,.08);font-size:12px;">All</span>
+                  <span style="padding:6px 10px;border-radius:999px;background:#dcc7a7;border:1px solid transparent;font-size:12px;">product</span>
+                  <span style="padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(32,25,18,.08);font-size:12px;">backend</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Option A: Editorial Workspace</h3>
+      <p>Warm, memorable, more design-forward. Better if you want the app to feel premium and differentiated.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="productivity" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option B: Crisp Productivity</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#eef6f3 0%,#dcebe4 100%);padding:16px;color:#10231b;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:.65;">Bookmark Control</div>
+              <div style="font-size:26px;font-weight:800;">Save fast. Find faster.</div>
+            </div>
+            <div style="border:1px solid rgba(16,35,27,.12);padding:8px 12px;border-radius:12px;background:#ffffffb8;font-size:12px;">Continue with Google</div>
+          </div>
+          <div style="display:grid;grid-template-columns:.82fr 1.18fr;gap:12px;">
+            <div style="background:#ffffffb8;border:1px solid rgba(16,35,27,.08);border-radius:18px;padding:14px;">
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Search</div>
+              <div style="background:#fff;border-radius:12px;padding:10px;border:1px solid rgba(16,35,27,.08);margin-bottom:10px;">Search title or URL</div>
+              <div style="display:grid;gap:8px;">
+                <div style="padding:8px 10px;border-radius:999px;background:#0f6c52;color:#fff;font-size:12px;width:max-content;">design</div>
+                <div style="padding:8px 10px;border-radius:999px;background:#fff;font-size:12px;width:max-content;border:1px solid rgba(16,35,27,.08);">frontend</div>
+                <div style="padding:8px 10px;border-radius:999px;background:#fff;font-size:12px;width:max-content;border:1px solid rgba(16,35,27,.08);">docs</div>
+              </div>
+            </div>
+            <div style="display:grid;gap:10px;">
+              <div style="background:#0f6c52;color:#effaf4;border-radius:18px;padding:14px;">
+                <div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.72;">New bookmark</div>
+                <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+                  <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px;">URL</div>
+                  <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px;">Title</div>
+                  <div style="background:#e7f7ef;color:#0f6c52;border-radius:12px;padding:10px 14px;font-weight:700;">Save</div>
+                </div>
+              </div>
+              <div style="background:#ffffffb8;border:1px solid rgba(16,35,27,.08);border-radius:18px;padding:14px;">
+                <div style="display:grid;gap:8px;">
+                  <div style="background:#fff;border-radius:14px;padding:10px;border:1px solid rgba(16,35,27,.08);display:flex;justify-content:space-between;">
+                    <div>
+                      <div style="font-weight:700;">Vercel deployment docs</div>
+                      <div style="font-size:12px;opacity:.68;">vercel.com</div>
+                    </div>
+                    <div style="font-size:12px;opacity:.55;">Delete</div>
+                  </div>
+                  <div style="background:#fff;border-radius:14px;padding:10px;border:1px solid rgba(16,35,27,.08);display:flex;justify-content:space-between;">
+                    <div>
+                      <div style="font-weight:700;">Realtime patterns in Supabase</div>
+                      <div style="font-size:12px;opacity:.68;">supabase.com</div>
+                    </div>
+                    <div style="font-size:12px;opacity:.55;">Delete</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Option B: Crisp Productivity</h3>
+      <p>Sharper, more app-like, easier to implement cleanly. Better if you want strong functional clarity with lighter design risk.</p>
+    </div>
+  </div>
+</div>
