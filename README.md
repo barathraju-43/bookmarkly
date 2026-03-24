@@ -2,6 +2,9 @@
 
 A polished bookmark manager built with Next.js App Router, Supabase Auth/Postgres/Realtime, Tailwind CSS, and shadcn/ui.
 
+- Live URL: [https://bookmarkly-rose.vercel.app](https://bookmarkly-rose.vercel.app)
+- GitHub Repo: [https://github.com/barathraju-43/bookmarkly](https://github.com/barathraju-43/bookmarkly)
+
 ## Stack
 
 - Next.js 16 App Router
@@ -173,9 +176,12 @@ Deploy to Vercel with:
 
 After deployment, add the production callback URL to Supabase Auth Redirect URLs:
 
-- `https://<your-vercel-domain>/auth/callback`
+- `https://bookmarkly-rose.vercel.app/auth/callback`
 
-The live Vercel URL can be added here once deployed.
+Recommended Supabase production URL settings:
+
+- Site URL: `https://bookmarkly-rose.vercel.app`
+- Redirect URL: `https://bookmarkly-rose.vercel.app/auth/callback`
 
 ## Loom Outline
 
