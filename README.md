@@ -1,20 +1,54 @@
-# Smart Bookmark
+# Bookmarkly
 
-A polished bookmark manager built with Next.js App Router, Supabase Auth/Postgres/Realtime, Tailwind CSS, and shadcn/ui.
+A polished bookmark manager built for the Abstrabit Fullstack Engineer take-home assessment.
 
 - Live URL: [https://bookmarkly-rose.vercel.app](https://bookmarkly-rose.vercel.app)
 - GitHub Repo: [https://github.com/barathraju-43/bookmarkly](https://github.com/barathraju-43/bookmarkly)
 
+## What I Built
+
+Bookmarkly is a private bookmark manager with:
+
+- Google OAuth only authentication
+- private per-user bookmarks enforced with Supabase Row Level Security
+- realtime cross-tab sync using Supabase Realtime
+- create, edit, delete, and restore flows
+- a polished dashboard with `List` and `Icons` layouts
+- tag-based organization and fast client-side retrieval
+
+The goal was to ship something that feels like a real product, not just a CRUD demo.
+
 ## Stack
 
-- Next.js 16 App Router
+- Next.js 16 with App Router
 - TypeScript
-- Supabase Auth with Google OAuth
-- Supabase Postgres + Row Level Security
-- Supabase Realtime `postgres_changes`
-- Tailwind CSS v4 + shadcn/ui
+- Supabase Auth
+- Supabase Postgres
+- Supabase Realtime
+- Tailwind CSS
+- shadcn/ui primitives
 - Vitest + Testing Library
 - Playwright
+- Vercel
+
+## Features
+
+### Core Requirements
+
+- Google OAuth login
+- add bookmarks with validation
+- private bookmarks per user
+- realtime sync across tabs
+- delete with confirmation
+- deployed on Vercel
+- responsive polished UI
+
+### Additional UX Improvements
+
+- editable bookmarks
+- recently deleted view with restore
+- deterministic tag colors for quicker scanning
+- two dashboard display modes: `List` and `Icons`
 
 ## Local Setup
 
@@ -24,22 +58,24 @@ A polished bookmark manager built with Next.js App Router, Supabase Auth/Postgre
 npm install
 ```
 
-2. Copy env vars:
+2. Create a local env file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Add values:
+3. Add:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-4. Run the SQL migration in Supabase SQL Editor or through the Supabase CLI:
+4. Run the SQL migration in Supabase:
 
-`supabase/migrations/20260324170000_create_bookmarks.sql`
+```text
+supabase/migrations/20260324170000_create_bookmarks.sql
+```
 
 5. Start the app:
 
@@ -47,98 +83,199 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+6. Open [http://localhost:3000](http://localhost:3000)
 
 ## Supabase Auth Setup
 
 ### Google OAuth
 
-Enable Google as the only provider in Supabase Auth.
+I enabled Google as the only Supabase auth provider, matching the assessment requirement exactly.
 
-Google Cloud OAuth client configuration:
+Google Cloud configuration:
 
-- Authorized redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`
+- OAuth client type: `Web application`
+- Authorized redirect URI:
+  - `https://<your-project-ref>.supabase.co/auth/v1/callback`
 
-Supabase Auth URL configuration:
+Supabase Auth configuration:
 
-- Site URL: `http://localhost:3000` for local development
+- Local Site URL:
+  - `http://localhost:3000`
+- Production Site URL:
+  - `https://bookmarkly-rose.vercel.app`
 - Redirect URLs:
   - `http://localhost:3000/auth/callback`
-  - `https://<your-vercel-domain>/auth/callback`
+  - `https://bookmarkly-rose.vercel.app/auth/callback`
 
-### App flow
+### Auth Flow
 
-- The landing page starts Google OAuth from the browser using Supabase Auth.
-- Supabase redirects back to `/auth/callback`.
-- The callback route exchanges the code for a session and redirects to `/app`.
-- `/app` is protected through Next.js proxy logic plus a server-side user check.
+- The landing page starts the Google OAuth flow from the browser.
+- Supabase handles the provider redirect.
+- `/auth/callback` exchanges the auth code for a session.
+- Protected navigation is enforced both in `src/proxy.ts` and again on the server in `src/app/app/page.tsx`.
 
-## Row Level Security
+This avoids login flicker while still keeping the authenticated route safe on the server.
 
-The `bookmarks` table is private per user and enforced in Postgres, not just in the UI.
+## Database Schema And RLS
 
-Schema highlights:
+The app uses one main table:
 
-- `user_id` references `auth.users(id)`
-- `tags` uses `text[]`
-- `updated_at` is maintained by a trigger
-- Realtime publication includes `public.bookmarks`
+```sql
+public.bookmarks
+```
 
-Policies:
+Key columns:
 
-- `select`: `auth.uid() = user_id`
-- `insert`: `with check (auth.uid() = user_id)`
-- `delete`: `auth.uid() = user_id`
+- `id uuid primary key`
+- `user_id uuid not null references auth.users(id)`
+- `url text not null`
+- `title text not null`
+- `tags text[] not null default '{}'`
+- `created_at timestamptz`
+- `updated_at timestamptz`
+
+Supporting pieces:
+
+- index on `(user_id, created_at desc)`
+- GIN index on `tags`
+- `updated_at` trigger
+- realtime publication for `public.bookmarks`
+
+### RLS Policies
+
+Policies in [supabase/migrations/20260324170000_create_bookmarks.sql](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/supabase/migrations/20260324170000_create_bookmarks.sql):
+
+- `select`
+  - `auth.uid() = user_id`
+- `insert`
+  - `with check (auth.uid() = user_id)`
+- `delete`
+  - `auth.uid() = user_id`
 
 Why this is correct:
 
-- A signed-in user can only read rows whose `user_id` matches their auth user id.
-- Inserts cannot forge ownership because the database rejects rows where `user_id` does not match the session user.
-- Deletes only succeed for owned rows.
-- The app never uses the service role key, so browser and server requests both go through the same RLS boundary.
+- users can only read rows they own
+- users cannot insert bookmarks on behalf of another user
+- users cannot delete another user’s bookmarks
+- the app does not use a service role key in runtime, so requests still go through RLS
+
+That means privacy is enforced by the database, not just by conditional frontend rendering.
 
 ## Realtime Sync
 
-The `/app` page fetches the initial bookmark list on the server for a stable first render.
+Initial bookmark data is fetched server-side in [src/app/app/page.tsx](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/app/app/page.tsx) for a stable first render.
 
-After hydration, the client subscribes to Supabase Realtime with `postgres_changes`:
+After hydration, the client sets up a Supabase Realtime subscription in [src/components/bookmarks/bookmark-dashboard-shell.tsx](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/components/bookmarks/bookmark-dashboard-shell.tsx).
 
-- `INSERT` events are filtered to `user_id=eq.<current-user-id>`
-- `DELETE` events are handled by bookmark id
-- local state uses an upsert helper so current-tab optimistic updates and incoming realtime events do not duplicate rows
+Implementation details:
 
-Cleanup:
+- uses `postgres_changes`
+- listens to `INSERT`, `UPDATE`, and `DELETE`
+- insert and update are filtered by:
+  - `user_id=eq.<current-user-id>`
+- delete is reconciled by bookmark id
+- incoming records are merged with an upsert helper to avoid duplicates
 
-- the dashboard subscribes in a client component effect
-- the returned cleanup function removes the Realtime channel on unmount
-- if the component remounts under a different session, it will establish a fresh channel
+Important cleanup details:
+
+- the subscription function returns a cleanup callback
+- on unmount, the channel is removed with `supabase.removeChannel(channel)`
+- the realtime auth token is applied before the channel subscribes
+- auth state changes refresh the realtime token if the session changes
+
+This matters because with authenticated realtime plus RLS, subscribing before `realtime.setAuth(...)` can silently break cross-tab sync.
 
 ## Bonus Feature
 
-The bonus feature is search plus tag filtering.
+The official bonus feature is:
+
+- `search + tag filtering`
 
 Why I chose it:
 
-- it makes the app materially better without inflating the scope
-- it demonstrates product sense because users usually need retrieval, not just storage
-- it fits the bookmark workflow naturally and stays readable in a short take-home window
+- bookmark managers become useful when retrieval is fast, not just when storage works
+- it improves the core product loop immediately
+- it adds product value without exploding scope
 
 Behavior:
 
-- tags are optional on creation
-- search matches title and URL client-side
-- tag pills are generated from saved bookmarks
+- tags are optional on create/edit
+- search matches bookmark title and URL
+- tags are generated from the user’s saved bookmarks
 - clicking a tag applies a single active tag filter
 
-## Problems I Ran Into
+## Other Product Decisions
 
-1. The local Node version in this environment (`22.8.0`) was incompatible with the newest Vitest bootstrap path I initially installed. I fixed that by downgrading Vitest to a compatible version and separating pure helper tests from browser-like component tests.
-2. Next.js 16 warns that `middleware.ts` is deprecated in favor of `proxy.ts`. I switched to the new convention so the auth gate follows the current framework direction.
-3. Supabase Realtime delete events are not filterable the same way insert events are. I handled deletes by id and relied on authenticated Realtime access plus RLS-backed visibility.
+I also added two small usability improvements because they made the product feel more complete without changing the core scope:
+
+- editable bookmarks
+  - users can fix titles, URLs, or tags without deleting and recreating entries
+- recently deleted with restore
+  - deleted bookmarks are recoverable for seven days from local state
+
+I consider these UX refinements, not the official bonus feature.
+
+## Design Approach
+
+I aimed for a polished editorial productivity interface rather than a default admin-style CRUD dashboard.
+
+Design decisions:
+
+- stitch-inspired layout direction
+- strong card geometry and soft gradients
+- compact top navigation
+- focused sidebar
+- clear empty and loading states
+- responsive layout behavior
+
+I intentionally kept only `List` and `Icons` layout modes in the final version. That kept the product more coherent and avoided shipping a visually interesting but less truthful “preview” mode.
+
+## Problems I Ran Into And How I Solved Them
+
+1. Supabase table not found after login
+
+- Problem:
+  - login succeeded, but `/app` crashed because the `public.bookmarks` table did not exist in the configured project
+- Fix:
+  - ran the migration in the correct Supabase project and verified the table plus policies existed before continuing
+
+2. Next.js 16 routing conventions changed
+
+- Problem:
+  - `middleware.ts` is deprecated in favor of `proxy.ts`
+- Fix:
+  - used `src/proxy.ts` for route protection so the app follows the current framework direction
+
+3. Hydration mismatch from browser-only state
+
+- Problem:
+  - `recently deleted` data depends on `localStorage`, which can differ between server and client render
+- Fix:
+  - initialized state safely on the server, then hydrated from `localStorage` in an effect and gated the write-back effect
+
+4. Realtime cross-tab sync regressed during later UI work
+
+- Problem:
+  - the realtime channel could subscribe before the auth token was applied
+- Fix:
+  - explicitly waited for the session token and called `realtime.setAuth(...)` before subscribing
+
+5. URL validation was too loose initially
+
+- Problem:
+  - plain values like `bookmark` could be normalized into something that passed URL parsing
+- Fix:
+  - added hostname-level validation and rejected non-domain hosts unless they are localhost or an IP
 
 ## One Thing I’d Improve With More Time
 
-I would add bookmark metadata enrichment on save, especially automatic page title and hostname extraction with graceful fallbacks. That would improve capture speed without making the core data model much more complex.
+I would add bookmark metadata enrichment on save:
+
+- automatic page title extraction
+- hostname/favicon enrichment
+- smarter previews when sites expose safe metadata
+
+That would make capture faster and the library richer without changing the app’s core architecture.
 
 ## Testing
 
@@ -156,45 +293,48 @@ Playwright smoke:
 npm run test:e2e
 ```
 
-Current automated coverage includes:
+Current coverage includes:
 
 - URL normalization and tag parsing
-- dashboard validation and empty state
+- client-side validation
 - create flow
+- edit flow
 - search and tag filtering
 - delete confirmation
-- realtime insert handling and subscription cleanup
+- recently deleted restore flow
+- realtime auth ordering and subscription cleanup
 - landing page CTA
-- unauthenticated `/app` redirect smoke
+- unauthenticated `/app` redirect behavior
 
 ## Deployment Notes
 
-Deploy to Vercel with:
+Vercel env vars used:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-After deployment, add the production callback URL to Supabase Auth Redirect URLs:
+Production setup:
 
-- `https://bookmarkly-rose.vercel.app/auth/callback`
+- Site URL:
+  - `https://bookmarkly-rose.vercel.app`
+- Redirect URL:
+  - `https://bookmarkly-rose.vercel.app/auth/callback`
 
-Recommended Supabase production URL settings:
+## Loom Walkthrough Outline
 
-- Site URL: `https://bookmarkly-rose.vercel.app`
-- Redirect URL: `https://bookmarkly-rose.vercel.app/auth/callback`
+Suggested demo order:
 
-## Loom Outline
-
-Keep the recording under 5 minutes:
-
-1. Show the landing page and Google sign-in entry point.
-2. Show the `/app` dashboard after login.
-3. Add a bookmark with tags.
-4. Open a second tab and demonstrate realtime sync.
-5. Search by text and filter by a tag.
-6. Delete a bookmark and show the confirmation dialog.
-7. Briefly walk through:
-   - `supabase/migrations/...create_bookmarks.sql`
-   - `src/app/app/actions.ts`
-   - `src/components/bookmarks/bookmark-dashboard-shell.tsx`
-   - `src/lib/supabase/*`
+1. Landing page and Google login
+2. Authenticated dashboard
+3. Add bookmark
+4. Edit bookmark
+5. Search and tag filtering
+6. Realtime sync across two tabs
+7. Delete confirmation
+8. Recently deleted and restore
+9. Code walkthrough:
+   - [supabase/migrations/20260324170000_create_bookmarks.sql](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/supabase/migrations/20260324170000_create_bookmarks.sql)
+   - [src/app/app/actions.ts](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/app/app/actions.ts)
+   - [src/components/bookmarks/bookmark-dashboard-shell.tsx](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/components/bookmarks/bookmark-dashboard-shell.tsx)
+   - [src/lib/supabase/server.ts](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/lib/supabase/server.ts)
+   - [src/proxy.ts](/Users/barathraju/Documents/smart_bookmark_manager/.worktrees/stitch-layout/src/proxy.ts)
