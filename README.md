@@ -149,6 +149,9 @@ Policies in [supabase/migrations/20260324170000_create_bookmarks.sql](/Users/bar
   - `auth.uid() = user_id`
 - `insert`
   - `with check (auth.uid() = user_id)`
+- `update`
+  - `using (auth.uid() = user_id)`
+  - `with check (auth.uid() = user_id)`
 - `delete`
   - `auth.uid() = user_id`
 
@@ -156,6 +159,7 @@ Why this is correct:
 
 - users can only read rows they own
 - users cannot insert bookmarks on behalf of another user
+- users cannot update another user’s bookmarks
 - users cannot delete another user’s bookmarks
 - the app does not use a service role key in runtime, so requests still go through RLS
 
